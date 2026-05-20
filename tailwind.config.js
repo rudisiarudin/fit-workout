@@ -9,17 +9,17 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdbb74',
-          400: '#fb923c',
-          500: '#f97316', // Primary fitness Orange
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
-          950: '#431407',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#0055ff', // Primary Electric Blue matching FITFUEL
+          600: '#0044cc',
+          700: '#003399',
+          800: '#002266',
+          900: '#001133',
+          950: '#00081a',
         },
         accent: {
           50: '#ecfdf5',

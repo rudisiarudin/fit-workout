@@ -10,6 +10,8 @@ import ProgressChart from './components/ProgressChart';
 import WorkoutHistoryCard from './components/WorkoutHistoryCard';
 import CustomPlanForm from './components/CustomPlanForm';
 import ReminderForm from './components/ReminderForm';
+import Onboarding, { type UserProfile } from './components/Onboarding';
+import { Mars, Venus, User } from 'lucide-react';
 
 import {
   Flame,
@@ -127,6 +129,17 @@ export default function App() {
   // Custom weight tracking inputs
   const [weightInput, setWeightInput] = useState<string>('');
   const [showPlanForm, setShowPlanForm] = useState<boolean>(false);
+
+  // User onboarding profile settings
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    gender: '',
+    age: 25,
+    height: 170,
+    weight: 65,
+    activityLevel: '',
+    goal: '',
+    isCompleted: false
+  });
 
   // Load initial/persistent data
   useEffect(() => {
@@ -294,13 +307,84 @@ export default function App() {
       localStorage.setItem('fittrack_badges', JSON.stringify(['first_workout', 'streak_3']));
     }
 
-    // Apply dark class on load if relevant
-    const theme = localStorage.getItem('theme');
-    if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
+    // 6. User onboarding profile loading
+    const savedProfile = localStorage.getItem('fittrack_user_profile');
+    if (savedProfile) {
+      setUserProfile(JSON.parse(savedProfile));
     }
+
+    // Apply dark class on load (Forced for FITFUEL theme)
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
   }, []);
+
+  const handleOnboardingComplete = (profile: UserProfile) => {
+    setUserProfile(profile);
+    localStorage.setItem('fittrack_user_profile', JSON.stringify(profile));
+
+    // Update body weight list automatically with their starting weight
+    const weightRecord = {
+      date: new Date().toISOString(),
+      weight: profile.weight
+    };
+
+    // If there is no weight history or it's empty, create it. Otherwise prepend/append.
+    const savedWeight = localStorage.getItem('fittrack_bodyweight');
+    let currentWeightList = [];
+    if (savedWeight) {
+      currentWeightList = JSON.parse(savedWeight);
+    }
+    
+    // Check if we already logged weight today, if not, add it.
+    const todayStr = new Date().toDateString();
+    const hasLogToday = currentWeightList.some((w: any) => new Date(w.date).toDateString() === todayStr);
+    
+    if (!hasLogToday) {
+      const updatedWeightList = [...currentWeightList, weightRecord];
+      setBodyWeightData(updatedWeightList);
+      localStorage.setItem('fittrack_bodyweight', JSON.stringify(updatedWeightList));
+    } else {
+      setBodyWeightData(currentWeightList);
+    }
+
+    // Award 50 XP as starting onboarding reward!
+    const nextXp = xp + 50;
+    setXp(nextXp);
+    localStorage.setItem('fittrack_xp', String(nextXp));
+  };
+
+  // Calorie calculations based on user profile
+  const getProfileCalorieStats = () => {
+    const { gender, weight, height, age, activityLevel, goal } = userProfile;
+    if (!gender || !activityLevel || !goal) return { bmr: 1500, tdee: 2000, targetCalories: 1800 };
+
+    let bmr = 0;
+    if (gender === 'male') {
+      bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+    } else {
+      bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+    }
+
+    let multiplier = 1.2;
+    if (activityLevel === 'sedentary') multiplier = 1.2;
+    else if (activityLevel === 'lightly_active') multiplier = 1.375;
+    else if (activityLevel === 'moderately_active') multiplier = 1.55;
+    else if (activityLevel === 'very_active') multiplier = 1.725;
+
+    const tdee = bmr * multiplier;
+    let targetCalories = tdee;
+    if (goal === 'lose_weight') targetCalories = tdee - 500;
+    else if (goal === 'gain_muscle') targetCalories = tdee + 300;
+
+    return {
+      bmr: Math.round(bmr),
+      tdee: Math.round(tdee),
+      targetCalories: Math.round(targetCalories)
+    };
+  };
+
+  const profileCalorieStats = getProfileCalorieStats();
 
   // Save history helper
   const saveHistoryToStorage = (newHistory: HistorySession[]) => {
@@ -608,6 +692,10 @@ export default function App() {
 
   const stats = getDashboardStats();
 
+  if (!userProfile.isCompleted) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex transition-colors duration-300">
       
@@ -638,240 +726,143 @@ export default function App() {
 
         {/* VIEW: DASHBOARD */}
         {currentView === 'dashboard' && (
-          <div className="space-y-6">
-            
-            {/* Header greeting */}
-            <div className="flex items-center justify-between flex-wrap gap-4 bg-gradient-to-r from-brand-500/10 to-orange-500/5 dark:from-brand-950/20 dark:to-zinc-900/40 p-6 rounded-3xl border border-brand-200/20 dark:border-brand-900/20">
-              <div>
-                <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5 mb-1.5">
-                  <Sparkles className="h-4 w-4 text-brand-500 animate-spin-slow" /> FitTrack Home & Gym
-                </span>
-                <h2 className="text-2xl md:text-3xl font-black text-zinc-800 dark:text-white leading-tight">
-                  Halo, Atlet Fit! 👋
-                </h2>
-                <p className="text-sm text-zinc-550 dark:text-zinc-400 mt-1 max-w-md font-semibold">
-                  Mari capai target kebugaran Anda hari ini dengan rutinitas teratur dan hidrasi optimal.
-                </p>
-              </div>
+          <div className="space-y-4 max-w-md mx-auto md:max-w-2xl">
 
-              {/* Water Drink tracker on Dashboard */}
-              <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-4 rounded-2xl border border-zinc-150 dark:border-zinc-800 shadow-sm flex flex-col items-center justify-center text-center w-full sm:w-56 shrink-0">
-                <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-1 mb-1">
-                  <GlassWater className="h-4 w-4 text-blue-500 fill-current" /> Target Air Minum
-                </span>
-                <span className="text-xl font-extrabold text-blue-600 dark:text-blue-400">{waterIntake} / 2000 ml</span>
-                <div className="w-full bg-zinc-100 dark:bg-zinc-950 h-2 rounded-full mt-2.5 overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-full transition-all duration-500" 
-                    style={{ width: `${Math.min(100, (waterIntake / 2000) * 100)}%` }}
+            {/* ── GREETING ── */}
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <h2 className="text-2xl font-black text-white leading-tight">Halo, FitFam! 💪</h2>
+                <p className="text-xs text-zinc-400 font-semibold mt-0.5">Konsistensi kecil, hasil luar biasa.</p>
+              </div>
+              <button
+                onClick={() => setView('profile')}
+                className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-all shrink-0"
+              >
+                {userProfile.gender === 'male' ? <Mars className="w-5 h-5 text-[#0055ff]" /> : userProfile.gender === 'female' ? <Venus className="w-5 h-5 text-pink-400" /> : <User className="w-5 h-5 text-zinc-400" />}
+              </button>
+            </div>
+
+            {/* ── RINGKASAN HARI INI ── */}
+            <div className="bg-zinc-900 rounded-3xl p-5 border border-zinc-800">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Ringkasan Hari Ini</p>
+              <div className="flex items-center gap-5">
+                {/* SVG Ring */}
+                <div className="relative shrink-0 w-24 h-24">
+                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#27272a" strokeWidth="10" />
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="url(#ringGrad)" strokeWidth="10"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 38}`}
+                      strokeDashoffset={`${2 * Math.PI * 38 * (1 - Math.min(stats.workoutsCount / 7, 1))}`}
+                      className="transition-all duration-700"
+                    />
+                    <defs>
+                      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#22c55e" />
+                        <stop offset="100%" stopColor="#00d2ff" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-black text-white leading-none">{Math.min(100, Math.round((stats.workoutsCount / 7) * 100))}%</span>
+                  </div>
+                </div>
+
+                {/* Stat list */}
+                <div className="flex-1 space-y-2.5 min-w-0">
+                  {[
+                    { icon: <Flame className="h-4 w-4 text-green-400" />, label: 'Kalori Terbakar', val: `${stats.calories} kkal` },
+                    { icon: <Activity className="h-4 w-4 text-green-400" />, label: 'Aktivitas', val: `${stats.workoutsCount}/10 sesi` },
+                    { icon: <Clock className="h-4 w-4 text-green-400" />, label: 'Durasi', val: `${stats.durationMins} menit` },
+                    { icon: <Calendar className="h-4 w-4 text-green-400" />, label: 'Streak', val: `${streak} hari 🔥` },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="shrink-0">{s.icon}</div>
+                      <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-zinc-500 truncate">{s.label}</span>
+                        <span className="text-xs font-black text-white whitespace-nowrap">{s.val}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── PROGRAM AKTIF ── */}
+            <div className="bg-zinc-900 rounded-3xl p-4 border border-zinc-800">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Program Aktif</p>
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-16 rounded-xl overflow-hidden shrink-0 bg-zinc-800">
+                  <img
+                    src={userProfile.gender === 'female' ? '/image/woman.png' : '/image/man.png'}
+                    alt="program"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
-                <div className="flex items-center gap-2 mt-3 w-full">
-                  <button
-                    onClick={() => handleWaterAdd(-250)}
-                    className="flex-1 text-[10px] font-black bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-850 p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 transition-all text-zinc-500"
-                  >
-                    -250ml
-                  </button>
-                  <button
-                    onClick={() => handleWaterAdd(250)}
-                    className="flex-1 text-[10px] font-black bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 text-blue-500 p-1.5 rounded-lg border border-blue-200/50 dark:border-blue-900/30 transition-all"
-                  >
-                    +250ml
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Metrics cards grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              
-              {/* Card 1: Completed workouts this week */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-5 rounded-3xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-xl" />
-                <div className="p-3 rounded-2xl bg-brand-50 dark:bg-brand-950 text-brand-500">
-                  <CheckCircle2 className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-zinc-800 dark:text-white leading-none">{stats.workoutsCount}</h4>
-                  <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1 block">Workout Minggu Ini</span>
-                </div>
-              </div>
-
-              {/* Card 2: Total calories */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-5 rounded-3xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-accent-500/5 dark:bg-accent-500/10 rounded-full blur-xl" />
-                <div className="p-3 rounded-2xl bg-accent-50 dark:bg-accent-950 text-accent-500">
-                  <Flame className="h-6 w-6 fill-current" />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-zinc-800 dark:text-white leading-none">{stats.calories}</h4>
-                  <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1 block">Total Kalori (kkal)</span>
-                </div>
-              </div>
-
-              {/* Card 3: Total Duration */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-5 rounded-3xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-xl" />
-                <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-500">
-                  <Clock className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-zinc-800 dark:text-white leading-none">{stats.durationMins}</h4>
-                  <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1 block">Durasi Latihan (menit)</span>
-                </div>
-              </div>
-
-              {/* Card 4: Streak and target progress */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-5 rounded-3xl flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-xl" />
-                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-500">
-                  <Award className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-2xl font-black text-zinc-800 dark:text-white leading-none">
-                    {Math.min(100, Math.round((stats.workoutsCount / 5) * 100))}%
-                  </h4>
-                  <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1 block">Target 5 Workout/Minggu</span>
-                  <div className="w-full bg-zinc-100 dark:bg-zinc-950 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                    <div className="bg-amber-500 h-full" style={{ width: `${Math.min(100, (stats.workoutsCount / 5) * 100)}%` }} />
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Split layout: recommended workout and quick chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Left Column: Daily recommended exercise */}
-              <div className="bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-900 dark:to-zinc-950 border border-zinc-150 dark:border-zinc-800/80 p-6 rounded-3xl shadow-sm flex flex-col justify-between h-full">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-black uppercase text-brand-500 tracking-wider flex items-center gap-1">
-                      <Sparkles className="h-4 w-4" /> Rekomendasi Hari Ini
-                    </span>
-                    <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
-                      Selasa Fit
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-black text-zinc-800 dark:text-white mb-2">{recommendedWorkout.name}</h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
-                    Gerakan penarget {recommendedWorkout.muscle} yang ideal dilakukan hari ini untuk menjaga metabolisme tubuh tetap aktif.
-                  </p>
-
-                  <div className="flex items-center gap-4 py-2.5 px-4 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/50 rounded-2xl text-center mb-6">
-                    <div className="flex-1 text-center">
-                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Reps</span>
-                      <span className="text-sm font-extrabold text-zinc-700 dark:text-zinc-250 block">{recommendedWorkout.reps}x</span>
-                    </div>
-                    <div className="flex-1 text-center border-l border-zinc-150 dark:border-zinc-800">
-                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Sets</span>
-                      <span className="text-sm font-extrabold text-zinc-700 dark:text-zinc-250 block">{recommendedWorkout.sets} Set</span>
-                    </div>
-                    <div className="flex-1 text-center border-l border-zinc-150 dark:border-zinc-800">
-                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Durasi</span>
-                      <span className="text-xs font-black text-brand-500 block mt-0.5">{recommendedWorkout.duration}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => navigateToWorkoutDetail(recommendedWorkout.id)}
-                    className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all text-center"
-                  >
-                    Lihat Tutorial
-                  </button>
-                  <button
-                    onClick={() => startWorkoutTracking(recommendedWorkout)}
-                    className="flex-1 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/10 hover:shadow-brand-500/25 transition-all text-center"
-                  >
-                    Mulai Sekarang
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Column: Chart preview */}
-              <div className="lg:col-span-2">
-                <ProgressChart historyData={historyData} bodyWeightData={bodyWeightData} />
-              </div>
-
-            </div>
-
-            {/* Gamification Achievements Grid */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-6 rounded-3xl shadow-sm mt-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h3 className="text-lg font-black text-zinc-800 dark:text-white flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-amber-500 fill-current animate-bounce" /> Piala & Pencapaian Rutinitas
-                  </h3>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-555 mt-0.5">
-                    Dapatkan lencana kehormatan dengan konsisten berolahraga dan mencatatkan kemajuan Anda!
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-black text-white leading-snug truncate">{recommendedWorkout.name}</h4>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">
+                    {userProfile.gender === 'female' ? 'Untuk Wanita' : 'Untuk Pria'} • Level Menengah
                   </p>
                 </div>
-                <div className="px-3.5 py-1.5 rounded-full bg-brand-500/5 dark:bg-brand-500/10 border border-brand-100/20 dark:border-brand-900/10 text-xs font-black text-brand-500">
-                  Lencana Unlocked: {unlockedBadges.length} / {BADGES.length}
-                </div>
+                <button
+                  onClick={() => startWorkoutTracking(recommendedWorkout)}
+                  className="px-4 py-2.5 rounded-xl bg-[#0055ff] text-white font-black text-xs shrink-0 shadow-[0_4px_15px_rgba(0,85,255,0.35)] hover:shadow-[0_4px_20px_rgba(0,85,255,0.5)] active:scale-95 transition-all"
+                >
+                  Lanjut
+                </button>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {BADGES.map((badge) => {
-                  const isUnlocked = unlockedBadges.includes(badge.id);
-                  return (
-                    <div
-                      key={badge.id}
-                      className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center text-center justify-center ${
-                        isUnlocked
-                          ? 'bg-zinc-50/50 dark:bg-zinc-950/20 border-zinc-200/60 dark:border-zinc-850 shadow-sm scale-100 hover:scale-[1.03]'
-                          : 'bg-zinc-50/20 dark:bg-zinc-950/5 border-zinc-200/20 dark:border-zinc-850/30 opacity-60'
-                      }`}
-                    >
-                      {/* Gradient Badge Glow */}
-                      {isUnlocked && (
-                        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${badge.color}`} />
-                      )}
+            {/* ── TUJUAN UTAMA ── */}
+            <div className="bg-zinc-900 rounded-3xl p-4 border border-zinc-800">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Tujuan Utama</p>
+              <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {[
+                  { label: 'Otot', emoji: '💪', key: 'gain_muscle' },
+                  { label: 'Fat Loss', emoji: '🔥', key: 'lose_weight' },
+                  { label: 'Toning', emoji: '⚡', key: 'keep_fit' },
+                  { label: 'Fleksibel', emoji: '🤸', key: 'improve_stamina' },
+                  { label: 'Kebugaran', emoji: '🏃', key: 'keep_fit' },
+                ].map((g, i) => (
+                  <button key={i} onClick={() => setView('workouts')} className="flex flex-col items-center gap-1.5 shrink-0">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all ${userProfile.goal === g.key ? 'bg-[#0055ff]/15 border border-[#0055ff]/40 shadow-[0_0_14px_rgba(0,85,255,0.2)]' : 'bg-zinc-800 border border-zinc-700 hover:border-zinc-600'}`}>
+                      {g.emoji}
+                    </div>
+                    <span className="text-[9px] text-zinc-400 font-bold">{g.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                      {/* Icon container */}
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-transform ${
-                          isUnlocked
-                            ? `bg-gradient-to-br ${badge.color} text-white shadow-md shadow-brand-500/10 scale-100`
-                            : 'bg-zinc-200 dark:bg-zinc-850 text-zinc-400'
-                        }`}
-                      >
-                        {badge.id === 'first_workout' && <Award className="h-5 w-5" />}
-                        {badge.id === 'streak_3' && <Flame className="h-5 w-5" />}
-                        {badge.id === 'streak_10' && <Trophy className="h-5 w-5" />}
-                        {badge.id === 'streak_30' && <Shield className="h-5 w-5" />}
-                        {badge.id === 'streak_100' && <Crown className="h-5 w-5" />}
-                        {badge.id === 'home_master' && <Home className="h-5 w-5" />}
-                        {badge.id === 'gym_master' && <Dumbbell className="h-5 w-5" />}
-                        {badge.id === 'hydration_hero' && <GlassWater className="h-5 w-5" />}
+            {/* ── PROGRESS MINGGUAN ── */}
+            <div className="bg-zinc-900 rounded-3xl p-4 border border-zinc-800">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Progress Mingguan</p>
+              <div className="space-y-4">
+                {[
+                  { icon: <Flame className="h-4 w-4 text-amber-400" />, label: 'Latihan', val: `${stats.workoutsCount}/7 sesi`, pct: Math.min(100, (stats.workoutsCount / 7) * 100), color: 'from-amber-400 to-green-400' },
+                  { icon: <Activity className="h-4 w-4 text-green-400" />, label: 'Aktivitas', val: `${stats.durationMins} menit`, pct: Math.min(100, (stats.durationMins / 300) * 100), color: 'from-green-400 to-cyan-400' },
+                  { icon: <Scale className="h-4 w-4 text-[#0055ff]" />, label: 'Nutrisi', val: `${Math.round(Math.min(100, (stats.calories / 3500) * 100))}% target`, pct: Math.min(100, (stats.calories / 3500) * 100), color: 'from-[#0055ff] to-[#00a6ff]' },
+                ].map((row, i) => (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        {row.icon}
+                        <span className="text-xs font-bold text-zinc-300">{row.label}</span>
                       </div>
-
-                      <h4 className={`text-xs font-black tracking-tight ${isUnlocked ? 'text-zinc-850 dark:text-zinc-200' : 'text-zinc-450 dark:text-zinc-600'}`}>
-                        {badge.name}
-                      </h4>
-                      <p className="text-[10px] text-zinc-450 dark:text-zinc-550 leading-tight mt-1 max-w-[120px]">
-                        {badge.desc}
-                      </p>
-
-                      {/* Locked Lock visual overlay */}
-                      {!isUnlocked && (
-                        <div className="absolute top-2 right-2 bg-zinc-200 dark:bg-zinc-850 text-zinc-400 dark:text-zinc-500 p-1 rounded-full text-[8px]">
-                          🔒
-                        </div>
-                      )}
+                      <span className="text-xs font-black text-zinc-400">{row.val}</span>
                     </div>
-                  );
-                })}
+                    <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className={`h-full bg-gradient-to-r ${row.color} rounded-full transition-all duration-700`} style={{ width: `${row.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
         )}
+
 
         {/* VIEW: WORKOUTS LIST */}
         {currentView === 'workouts' && (
@@ -1155,13 +1146,13 @@ export default function App() {
           (() => {
             if (!activeWorkout) {
               return (
-                <div className="p-12 text-center bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-3xl max-w-md mx-auto">
-                  <Dumbbell className="h-12 w-12 text-zinc-300 mx-auto mb-4 animate-bounce" />
-                  <h3 className="text-lg font-extrabold text-zinc-700 dark:text-white">Tidak ada latihan yang berjalan</h3>
-                  <p className="text-xs text-zinc-400 mt-1 max-w-xs mx-auto">Silakan pilih salah satu gerakan dari daftar latihan untuk melacak set Anda.</p>
+                <div className="p-12 text-center bg-zinc-950 border border-zinc-800 rounded-3xl max-w-md mx-auto">
+                  <Dumbbell className="h-12 w-12 text-zinc-600 mx-auto mb-4 animate-bounce" />
+                  <h3 className="text-lg font-extrabold text-white">Tidak ada latihan yang berjalan</h3>
+                  <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">Silakan pilih salah satu gerakan dari daftar latihan untuk melacak set Anda.</p>
                   <button
                     onClick={() => setView('workouts')}
-                    className="mt-5 px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold transition-all shadow-md"
+                    className="mt-5 px-5 py-2.5 rounded-xl bg-[#0055ff] hover:bg-[#0055ff]/90 text-white text-xs font-bold transition-all shadow-md"
                   >
                     Cari Latihan
                   </button>
@@ -1169,8 +1160,13 @@ export default function App() {
               );
             }
 
+            const activeExercise = activeWorkout.exercises[0];
+            const activeSetIdx = activeExercise.sets.findIndex(s => !s.completed);
+            const isAllSetsDone = activeSetIdx === -1;
+            const completedSetsCount = activeExercise.sets.filter(s => s.completed).length;
+
             return (
-              <div className="space-y-6 max-w-3xl mx-auto">
+              <div className="space-y-4 max-w-md mx-auto md:max-w-2xl">
                 
                 {/* REST TIMER POPUP OVERLAY */}
                 {showRestTimer && (
@@ -1182,13 +1178,13 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Header title */}
-                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/80 pb-4">
+                {/* ── HEADER STATUS ── */}
+                <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className="text-[10px] font-black uppercase text-brand-500 tracking-wider flex items-center gap-1.5">
-                      <Activity className="h-4 w-4 text-brand-500 animate-pulse" /> Workout Sedang Berlangsung
+                    <span className="text-[9px] font-black uppercase text-[#0055ff] tracking-widest flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0055ff] animate-ping" /> LATIHAN AKTIF
                     </span>
-                    <h2 className="text-2xl font-black text-zinc-800 dark:text-white mt-1">
+                    <h2 className="text-xl font-black text-white leading-tight mt-0.5 truncate max-w-[200px] sm:max-w-xs">
                       {activeWorkout.workout.name}
                     </h2>
                   </div>
@@ -1200,98 +1196,193 @@ export default function App() {
                         setView('dashboard');
                       }
                     }}
-                    className="px-4 py-2 rounded-xl border border-red-200/50 hover:bg-red-50 text-red-500 dark:hover:bg-red-950/20 text-xs font-bold transition-all active:scale-95"
+                    className="px-3.5 py-1.5 rounded-xl border border-red-500/20 hover:bg-red-950/30 text-red-400 text-xs font-extrabold transition-all"
                   >
                     Batal
                   </button>
                 </div>
 
-                {/* Timer block */}
-                <WorkoutTimer 
-                  isActive={true} 
-                  onTimeChange={(sec) => {
-                    const updated = { ...activeWorkout };
-                    updated.secondsElapsed = sec;
-                    setActiveWorkout(updated);
-                  }}
-                  initialSeconds={activeWorkout.secondsElapsed}
-                />
-
-                {/* Checklist sets panel */}
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 p-5 rounded-3xl shadow-md">
-                  <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3 mb-4">
-                    <h3 className="text-sm font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">Set Checklist</h3>
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase">Centang setelah menyelesaikan set</span>
+                {/* ── LIVE STATS HEADER ── */}
+                <div className="grid grid-cols-3 gap-3 bg-zinc-900 border border-zinc-800 rounded-2xl p-3 text-center">
+                  <div>
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase block">Durasi</span>
+                    <span className="text-sm font-mono font-black text-white block mt-0.5">
+                      {Math.floor(activeWorkout.secondsElapsed / 60)}:
+                      {String(activeWorkout.secondsElapsed % 60).padStart(2, '0')}
+                    </span>
                   </div>
-
-                  {activeWorkout.exercises.map((ex, exIdx) => (
-                    <div key={exIdx} className="space-y-3">
-                      <h4 className="text-xs font-black text-brand-550 dark:text-brand-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-3 bg-brand-500 rounded-full inline-block"></span> {ex.name}
-                      </h4>
-
-                      <div className="space-y-2">
-                        {ex.sets.map((set, setIdx) => (
-                          <div 
-                            key={setIdx}
-                            className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                              set.completed
-                                ? 'bg-accent-50/20 dark:bg-accent-950/10 border-accent-200/40 dark:border-accent-900/20'
-                                : 'bg-zinc-50/50 dark:bg-zinc-950/30 border-zinc-150 dark:border-zinc-850'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">SET {set.setNumber}</span>
-                              
-                              {/* Reps Input */}
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={set.reps}
-                                  onChange={(e) => updateSetDetails(exIdx, setIdx, 'reps', parseInt(e.target.value) || 1)}
-                                  className="w-11 py-1 px-1 text-center text-xs font-bold border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-lg outline-none"
-                                />
-                                <span className="text-[10px] text-zinc-400 font-bold">Reps</span>
-                              </div>
-
-                              {/* Weight Input (Gym only) */}
-                              {set.weight !== undefined && (
-                                <div className="flex items-center gap-1 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="2.5"
-                                    value={set.weight}
-                                    onChange={(e) => updateSetDetails(exIdx, setIdx, 'weight', parseFloat(e.target.value) || 0)}
-                                    className="w-14 py-1 px-1 text-center text-xs font-bold border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-lg outline-none"
-                                  />
-                                  <span className="text-[10px] text-zinc-400 font-bold">kg</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Checkmark Button */}
-                            <button
-                              onClick={() => toggleSetCompleted(exIdx, setIdx)}
-                              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                                set.completed
-                                  ? 'bg-accent-500 border-accent-500 text-white shadow-md'
-                                  : 'bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-transparent hover:border-zinc-400'
-                              }`}
-                            >
-                              <CheckCircle2 className="h-4.5 w-4.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  <div className="border-x border-zinc-800">
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase block">Est. Kalori</span>
+                    <span className="text-sm font-black text-orange-400 block mt-0.5">
+                      {Math.round(activeWorkout.secondsElapsed * 0.25)} kkal
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-zinc-500 font-bold uppercase block">XP Didapat</span>
+                    <span className="text-sm font-black text-green-400 block mt-0.5">
+                      +{completedSetsCount * 10} XP
+                    </span>
+                  </div>
                 </div>
 
-                {/* Personal Notes */}
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 p-5 rounded-3xl">
-                  <h3 className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3">Catatan Latihan Pribadi</h3>
+                {/* Hidden timer component for countup ticking */}
+                <div className="hidden">
+                  <WorkoutTimer 
+                    isActive={true} 
+                    onTimeChange={(sec) => {
+                      const updated = { ...activeWorkout };
+                      updated.secondsElapsed = sec;
+                      setActiveWorkout(updated);
+                    }}
+                    initialSeconds={activeWorkout.secondsElapsed}
+                  />
+                </div>
+
+                {/* ── MAIN FOCUS CONTENT ── */}
+                {!isAllSetsDone ? (
+                  /* FOCUS ACTIVE SET MODE CARD */
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-2xl animate-pulse" />
+                    
+                    {/* Horizontal Step Indicators */}
+                    <div className="flex gap-1.5 mb-5 justify-center">
+                      {activeExercise.sets.map((s, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`h-1.5 rounded-full flex-1 transition-all ${
+                            idx === activeSetIdx 
+                              ? 'bg-[#0055ff] shadow-[0_0_8px_rgba(0,85,255,0.5)]' 
+                              : s.completed 
+                              ? 'bg-green-500' 
+                              : 'bg-zinc-800'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Set Title */}
+                    <div className="text-center mb-6">
+                      <span className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Fokus Latihan</span>
+                      <h3 className="text-2xl font-black text-white mt-0.5">Set {activeSetIdx + 1} dari {activeExercise.sets.length}</h3>
+                    </div>
+
+                    {/* Steppers container */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      
+                      {/* Reps stepper */}
+                      <div className="bg-zinc-950 border border-zinc-850 rounded-2xl p-3 flex flex-col items-center">
+                        <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider mb-2">Reps Target</span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => updateSetDetails(0, activeSetIdx, 'reps', Math.max(1, activeExercise.sets[activeSetIdx].reps - 1))}
+                            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-600 flex items-center justify-center text-lg font-black text-white active:scale-90 transition-all select-none"
+                          >
+                            -
+                          </button>
+                          <span className="text-xl font-black text-white w-8 text-center font-mono">
+                            {activeExercise.sets[activeSetIdx].reps}
+                          </span>
+                          <button
+                            onClick={() => updateSetDetails(0, activeSetIdx, 'reps', activeExercise.sets[activeSetIdx].reps + 1)}
+                            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-600 flex items-center justify-center text-lg font-black text-white active:scale-90 transition-all select-none"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Weight stepper */}
+                      <div className="bg-zinc-950 border border-zinc-850 rounded-2xl p-3 flex flex-col items-center">
+                        <span className="text-[9px] text-zinc-500 font-black uppercase tracking-wider mb-2">Beban Angkatan</span>
+                        {activeExercise.sets[activeSetIdx].weight !== undefined ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateSetDetails(0, activeSetIdx, 'weight', Math.max(0, (activeExercise.sets[activeSetIdx].weight || 0) - 2.5))}
+                              className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-600 flex items-center justify-center text-lg font-black text-white active:scale-90 transition-all select-none"
+                            >
+                              -
+                            </button>
+                            <span className="text-base font-black text-white w-14 text-center font-mono truncate">
+                              {activeExercise.sets[activeSetIdx].weight} <span className="text-[9px] text-zinc-500 font-bold">kg</span>
+                            </span>
+                            <button
+                              onClick={() => updateSetDetails(0, activeSetIdx, 'weight', (activeExercise.sets[activeSetIdx].weight || 0) + 2.5)}
+                              className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-600 flex items-center justify-center text-lg font-black text-white active:scale-90 transition-all select-none"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-black text-zinc-400 py-1.5 uppercase tracking-wide">Berat Tubuh 🦾</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Large Check Set CTA */}
+                    <button
+                      onClick={() => toggleSetCompleted(0, activeSetIdx)}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white font-black text-sm shadow-[0_4px_20px_rgba(34,197,94,0.3)] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="h-5 w-5" /> Selesaikan Set & Istirahat ⏱️
+                    </button>
+                  </div>
+                ) : (
+                  /* CONGRATULATIONS ALL SETS DONE CARD */
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl relative overflow-hidden text-center flex flex-col items-center justify-center min-h-[220px]">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl animate-pulse" />
+                    <div className="w-14 h-14 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center text-green-400 mb-3 animate-bounce">
+                      <Trophy className="h-7 w-7" />
+                    </div>
+                    <h3 className="text-lg font-black text-white">Semua Set Selesai! 🎉</h3>
+                    <p className="text-xs text-zinc-400 mt-1 max-w-xs mb-5 leading-relaxed">
+                      Kerja keras luar biasa! Tekan tombol di bawah untuk menyelesaikan sesi dan mengklaim seluruh XP Anda hari ini.
+                    </p>
+                    <button
+                      onClick={finishActiveWorkout}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#0055ff] to-cyan-500 hover:from-[#0055ff]/90 hover:to-cyan-600 text-white font-black text-sm shadow-[0_4px_25px_rgba(0,85,255,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Klaim Reward & Selesai 🏆
+                    </button>
+                  </div>
+                )}
+
+                {/* ── SET CHECKLIST OVERVIEW ── */}
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-3xl">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-3">Ringkasan Checklist Set</span>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+                    {activeExercise.sets.map((set, setIdx) => (
+                      <div 
+                        key={setIdx}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                          set.completed
+                            ? 'bg-green-500/5 border-green-500/20 text-zinc-300'
+                            : 'bg-zinc-950/40 border-zinc-850 text-zinc-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-zinc-500">SET {set.setNumber}</span>
+                          <span className="text-xs font-black text-white">
+                            {set.reps} Reps {set.weight !== undefined ? `• ${set.weight} kg` : ''}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => toggleSetCompleted(0, setIdx)}
+                          className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
+                            set.completed
+                              ? 'bg-green-500 border-green-500 text-white'
+                              : 'bg-transparent border-zinc-700 text-transparent hover:border-zinc-600'
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── NOTES BOX ── */}
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-3xl">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Catatan Latihan Pribadi</span>
                   <textarea
                     value={activeWorkout.notes}
                     onChange={(e) => {
@@ -1299,18 +1390,10 @@ export default function App() {
                       updated.notes = e.target.value;
                       setActiveWorkout(updated);
                     }}
-                    placeholder="Masukkan perasaan Anda hari ini, catatan pompa otot, beban maksimal baru, dll..."
-                    className="w-full text-xs font-semibold p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 h-20 resize-none transition-all"
+                    placeholder="Masukkan perasaan Anda hari ini, beban maksimal baru, pompa otot, dll..."
+                    className="w-full text-xs font-semibold p-3 bg-zinc-950 border border-zinc-850 rounded-2xl outline-none focus:ring-1 focus:ring-[#0055ff] h-16 resize-none transition-all text-white placeholder-zinc-650"
                   />
                 </div>
-
-                {/* Finish Button */}
-                <button
-                  onClick={finishActiveWorkout}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-orange-500 hover:from-brand-600 hover:to-orange-600 text-white font-bold text-sm shadow-xl shadow-brand-500/10 hover:shadow-brand-500/25 transition-all duration-300 active:scale-[0.98]"
-                >
-                  <CheckCircle2 className="h-5 w-5 fill-current" /> Selesai Sesi Workout
-                </button>
 
               </div>
             );
@@ -1482,16 +1565,103 @@ export default function App() {
 
         {/* VIEW: SETTINGS */}
         {currentView === 'settings' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-black text-zinc-800 dark:text-white">Pengaturan FitTrack</h2>
-              <p className="text-sm text-zinc-455 dark:text-zinc-500 font-semibold mt-0.5">Konfigurasi preferensi tema perangkat, alarm pengingat, dan status notifikasi PWA.</p>
-            </div>
+          (() => {
+            const heightInMeters = userProfile.height / 100;
+            const bmi = userProfile.weight / (heightInMeters * heightInMeters || 1);
+            const getBmiCategory = (bmiVal: number) => {
+              if (bmiVal < 18.5) return { label: 'Sangat Kurus', color: 'text-blue-500 bg-blue-500/10' };
+              if (bmiVal < 25) return { label: 'Ideal (Normal)', color: 'text-emerald-500 bg-emerald-500/10' };
+              if (bmiVal < 30) return { label: 'Gemuk', color: 'text-amber-500 bg-amber-500/10' };
+              return { label: 'Obesitas', color: 'text-red-500 bg-red-500/10' };
+            };
+            const bmiCat = getBmiCategory(bmi);
+            
+            return (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-black text-zinc-800 dark:text-white">Pengaturan FitTrack</h2>
+                  <p className="text-sm text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">Konfigurasi preferensi tema perangkat, alarm pengingat, dan status notifikasi PWA.</p>
+                </div>
 
-            {/* Reminder Form component */}
-            <ReminderForm 
-              onSave={(rem) => console.log("Saved reminders:", rem)} 
-            />
+                {/* Fitness Profile Overview Card */}
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/85 p-6 rounded-3xl shadow-sm space-y-5">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                      <h3 className="text-lg font-black text-zinc-800 dark:text-white flex items-center gap-2">
+                        <User className="h-5 w-5 text-brand-500" /> Profil Kebugaran & Metabolisme
+                      </h3>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                        Data analisis metabolisme tubuh Anda berdasarkan pengaturan awal.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUserProfile({ ...userProfile, isCompleted: false });
+                      }}
+                      className="px-4 py-2 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-850 text-xs font-black text-brand-500 border border-brand-100 dark:border-zinc-800 rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-4 w-4" /> Edit & Hitung Ulang
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold block">Jenis Kelamin</span>
+                      <span className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300 block mt-1">
+                        {userProfile.gender === 'male' ? 'Pria (Male)' : 'Wanita (Female)'}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold block">Usia & Fisik</span>
+                      <span className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300 block mt-1">
+                        {userProfile.age} Thn • {userProfile.height} cm • {userProfile.weight} kg
+                      </span>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold block">Indeks Massa Tubuh (BMI)</span>
+                      <span className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300 block mt-1">
+                        {bmi.toFixed(1)} <strong className={`px-2 py-0.5 rounded-md text-[9px] ml-1 font-bold ${bmiCat.color}`}>{bmiCat.label}</strong>
+                      </span>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl">
+                      <span className="text-[9px] text-zinc-400 uppercase font-bold block">Tingkat Aktivitas</span>
+                      <span className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300 block mt-1">
+                        {userProfile.activityLevel === 'sedentary' && 'Jarang Bergerak'}
+                        {userProfile.activityLevel === 'lightly_active' && 'Aktivitas Ringan'}
+                        {userProfile.activityLevel === 'moderately_active' && 'Aktivitas Sedang'}
+                        {userProfile.activityLevel === 'very_active' && 'Sangat Aktif'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-100 dark:border-zinc-800/60 pt-4">
+                    <div className="p-4 bg-brand-500/[0.02] dark:bg-zinc-950/20 border border-brand-500/10 dark:border-zinc-800 rounded-2xl text-center">
+                      <span className="text-[10px] text-zinc-400 uppercase font-bold block">Basal Metabolic Rate (BMR)</span>
+                      <span className="text-xl font-black text-zinc-800 dark:text-white block mt-1">{profileCalorieStats.bmr} <span className="text-xs font-semibold text-zinc-400">kkal</span></span>
+                      <p className="text-[9px] text-zinc-450 dark:text-zinc-500 mt-1 font-semibold leading-tight">Kalori dasar yang dibutuhkan tubuh Anda saat beristirahat total.</p>
+                    </div>
+                    <div className="p-4 bg-brand-500/[0.02] dark:bg-zinc-950/20 border border-brand-500/10 dark:border-zinc-800 rounded-2xl text-center">
+                      <span className="text-[10px] text-zinc-400 uppercase font-bold block">Daily Expenditure (TDEE)</span>
+                      <span className="text-xl font-black text-zinc-800 dark:text-white block mt-1">{profileCalorieStats.tdee} <span className="text-xs font-semibold text-zinc-400">kkal</span></span>
+                      <p className="text-[9px] text-zinc-450 dark:text-zinc-500 mt-1 font-semibold leading-tight">Total pengeluaran kalori harian Anda yang disesuaikan tingkat aktivitas.</p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-brand-500/5 to-orange-500/5 border border-brand-500/20 rounded-2xl text-center">
+                      <span className="text-[10px] text-brand-500 uppercase font-black block">Target Asupan Kalori Harian</span>
+                      <span className="text-xl font-black text-brand-600 dark:text-brand-400 block mt-1">{profileCalorieStats.targetCalories} <span className="text-xs font-semibold text-brand-500">kkal</span></span>
+                      <p className="text-[9px] text-zinc-550 dark:text-zinc-400 mt-1 font-semibold leading-tight">
+                        {userProfile.goal === 'lose_weight' && 'Defisit kalori 500 kkal agar lemak terbakar.'}
+                        {userProfile.goal === 'gain_muscle' && 'Surplus kalori 300 kkal untuk pertumbuhan serat otot.'}
+                        {userProfile.goal === 'keep_fit' && 'Jumlah kalori seimbang untuk pertahankan berat badan saat ini.'}
+                        {userProfile.goal === 'improve_stamina' && 'Jumlah kalori bugar untuk pertahankan stamina optimal harian.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reminder Form component */}
+                <ReminderForm 
+                  onSave={(rem) => console.log("Saved reminders:", rem)} 
+                />
 
             {/* Reset App Panel */}
             <div className="bg-red-500/[0.03] dark:bg-red-500/[0.01] border border-red-500/20 dark:border-red-900/20 p-6 rounded-3xl max-w-xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1518,7 +1688,9 @@ export default function App() {
               </button>
             </div>
 
-          </div>
+              </div>
+            );
+          })()
         )}
 
       </main>

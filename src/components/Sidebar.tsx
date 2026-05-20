@@ -10,6 +10,18 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ currentView, setView, streak, xp }: SidebarProps) {
+  // Load profile from localStorage to customize details dynamically
+  const savedProfile = typeof window !== 'undefined' ? localStorage.getItem('fittrack_user_profile') : null;
+  const profile = savedProfile ? JSON.parse(savedProfile) : null;
+
+  const displayName = profile 
+    ? (profile.gender === 'male' ? 'Atlet Pria' : profile.gender === 'female' ? 'Atlet Wanita' : 'Fit User')
+    : 'Fit User';
+    
+  const displayGoal = profile
+    ? (profile.goal === 'lose_weight' ? 'Turunkan Berat' : profile.goal === 'gain_muscle' ? 'Bangun Otot' : profile.goal === 'keep_fit' ? 'Jaga Bugar' : 'Stamina Booster')
+    : 'Atlet Fit';
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Utama', desc: 'Ringkasan aktivitas hari ini', icon: Home },
     { id: 'workouts', label: 'Daftar Latihan', desc: 'Workout Rumah & Gym', icon: Dumbbell },
@@ -96,11 +108,11 @@ export default function Sidebar({ currentView, setView, streak, xp }: SidebarPro
         <div className="flex items-center justify-between px-1 pt-1">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-brand-500 text-white font-extrabold text-xs flex items-center justify-center uppercase ring-2 ring-brand-100 dark:ring-zinc-900">
-              FT
+              {profile && profile.gender ? (profile.gender === 'male' ? 'AP' : 'AW') : 'FT'}
             </div>
             <div>
-              <span className="text-xs font-black text-zinc-700 dark:text-zinc-250 block leading-tight">Fit User</span>
-              <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-extrabold block mt-0.5 uppercase tracking-wide">LEVEL {level} ATHLETE</span>
+              <span className="text-xs font-black text-zinc-700 dark:text-zinc-250 block leading-tight">{displayName}</span>
+              <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-extrabold block mt-0.5 uppercase tracking-wide">{displayGoal} • LVL {level}</span>
             </div>
           </div>
           <ThemeToggle />
