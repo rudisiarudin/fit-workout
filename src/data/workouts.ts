@@ -282,24 +282,24 @@ export const workouts: Workout[] = [
   },
   {
     id: 13,
-    name: "Cable Row",
+    name: "Cable Fly",
     category: "gym",
-    muscle: "Middle Back, Rhomboids, Lats, Biceps",
+    muscle: "Chest, Shoulders",
     sets: 4,
     reps: 10,
     rest: 90,
     duration: "12 menit",
-    lottieUrl: "https://assets-v2.lottiefiles.com/a/b96dac7e-1189-11ee-814c-77fd8d07983b/wsuy6czYqi.lottie",
-    tutorial: "Duduk di mesin seating cable row dengan kaki bertumpu pada platform depan. Tekuk lutut Anda sedikit. Pegang handle segitiga (V-bar). Tarik handle ke arah perut bagian bawah sambil menarik siku ke belakang dan membusungkan dada. Remas otot punggung Anda selama 1-2 detik, lalu lepaskan perlahan.",
+    lottieUrl: "https://assets-v2.lottiefiles.com/a/333f4f4e-1171-11ee-aa03-23dee1fbdb3c/ReXNkakRwh.lottie",
+    tutorial: "Pegang handle kabel di kedua tangan dengan posisi berdiri di tengah-tengah mesin cable crossover. Langkahkan satu kaki ke depan untuk stabilitas. Mulailah dengan lengan terbuka sedikit ditekuk di siku. Tarik kedua tangan Anda bersama-sama di depan dada dalam gerakan melengkung yang mulus, seolah memeluk pohon besar.",
     tips: [
-      "Jaga agar punggung Anda tetap tegak selama menarik beban, jangan membungkuk",
-      "Fokus pada menarik siku Anda sejauh mungkin ke belakang tubuh",
-      "Pundak harus rileks ke bawah, jangan diangkat mendekati telinga saat menarik"
+      "Fokus pada kontraksi otot dada (squeezing) di puncak gerakan",
+      "Jaga agar tekukan siku tetap konstan sepanjang gerakan",
+      "Lakukan pelepasan kabel ke belakang secara perlahan untuk resistensi penuh"
     ],
     commonErrors: [
-      "Menggunakan momentum pinggul dengan mengayunkan tubuh ke depan-belakang",
-      "Punggung melengkung atau membungkuk saat melepaskan beban ke depan",
-      "Menarik pegangan menggunakan kekuatan biceps sepenuhnya tanpa melatih punggung"
+      "Meluruskan lengan sepenuhnya (dapat mencederai siku)",
+      "Menggunakan momentum tubuh dengan mengayunkan punggung",
+      "Menarik kabel terlalu jauh ke belakang hingga melebihi garis bahu"
     ]
   },
   {
@@ -326,24 +326,24 @@ export const workouts: Workout[] = [
   },
   {
     id: 15,
-    name: "Treadmill",
+    name: "Triceps Pushdown",
     category: "gym",
-    muscle: "Cardio, Legs, Full Body Endurance",
-    sets: 1, // 1 session
-    reps: 1, // 1 duration
-    rest: 0,
-    duration: "20 menit",
+    muscle: "Triceps",
+    sets: 3,
+    reps: 12,
+    rest: 60,
+    duration: "10 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/dc69d87e-1189-11ee-a705-f7cb6318356f/i57pvwUoHh.lottie",
-    tutorial: "Berdirilah di atas sabuk treadmill. Pasang klip pengaman pada pakaian Anda. Mulailah berjalan dengan kecepatan lambat (2-3 km/jam) untuk pemanasan selama 3 menit. Naikkan kecepatan ke joging (5-8 km/jam) atau lari (9+ km/jam) sesuai kemampuan Anda. Lakukan pendinginan di akhir sesi.",
+    tutorial: "Berdirilah di depan mesin kabel tinggi dengan palang lurus atau tali terpasang. Genggam tali dengan kedua tangan, lalu tekuk siku Anda 90 derajat di dekat tubuh Anda. Jaga agar siku tetap menempel di sisi tubuh Anda. Tekan palang/tali ke bawah hingga lengan lurus sepenuhnya di samping tubuh Anda. Kembalikan secara perlahan ke posisi awal.",
     tips: [
-      "Jaga postur tubuh tetap tegak dan pandangan lurus ke depan, jangan melihat kaki",
-      "Gunakan ayunan tangan alami untuk membantu momentum lari Anda",
-      "Mendaratlah dengan bagian tengah kaki Anda untuk meminimalkan beban benturan sendi"
+      "Siku harus tetap terkunci rapat di samping tubuh sepanjang gerakan",
+      "Fokus pada meremas otot triceps saat lengan Anda lurus sepenuhnya",
+      "Jaga postur tubuh tetap tegak dengan sedikit condong ke depan"
     ],
     commonErrors: [
-      "Berpegangan pada pegangan tangan treadmill secara terus menerus saat berlari",
-      "Melompat dari treadmill saat sabuk masih berputar cepat",
-      "Mendarat dengan tumit terlalu keras secara terus-menerus"
+      "Membiarkan siku bergerak maju-mundur menjauh dari sisi tubuh",
+      "Menggunakan berat badan untuk menekan beban ke bawah",
+      "Gerakan tidak penuh (tidak meluruskan lengan sampai bawah)"
     ]
   },
   {
