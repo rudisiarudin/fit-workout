@@ -44,7 +44,7 @@ export default function WorkoutAnimation({ src, workoutName }: WorkoutAnimationP
           </div>
         </div>
       ) : (
-        <div className="w-full relative min-h-[350px] flex items-center justify-center">
+        <div className="w-full relative min-h-[380px] flex items-center justify-center overflow-hidden">
           {loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-zinc-900 z-10">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-500"></div>
@@ -55,7 +55,7 @@ export default function WorkoutAnimation({ src, workoutName }: WorkoutAnimationP
             src={src}
             loop
             autoplay
-            style={{ width: '100%', height: '100%', maxWidth: '380px' }}
+            style={{ width: '100%', height: '100%', maxWidth: '440px', transform: 'scale(1.45)', transformOrigin: 'center' }}
             dotLottieRefCallback={(dotLottie) => {
               if (dotLottie) {
                 dotLottie.addEventListener('load', () => {
