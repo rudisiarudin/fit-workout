@@ -27,7 +27,10 @@ import {
   Activity,
   Undo2,
   Home,
-  Dumbbell
+  Dumbbell,
+  Shield,
+  Crown,
+  Trophy
 } from 'lucide-react';
 
 
@@ -77,6 +80,25 @@ interface CustomPlan {
   }[];
 }
 
+interface Badge {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  color: string;
+}
+
+const BADGES: Badge[] = [
+  { id: 'first_workout', name: 'Iron Starter', desc: 'Menyelesaikan workout pertama Anda', icon: 'Award', color: 'from-amber-400 to-orange-500' },
+  { id: 'streak_3', name: 'Konsistensi Perunggu', desc: 'Melatih tubuh 3 hari berturut-turut', icon: 'Flame', color: 'from-orange-450 to-red-550' },
+  { id: 'streak_10', name: 'Pejuang 10 Hari', desc: 'Rutinitas olahraga 10 hari berturut-turut', icon: 'Trophy', color: 'from-indigo-400 to-purple-600' },
+  { id: 'streak_30', name: 'Juara Sebulan', desc: 'Melatih tubuh 30 hari berturut-turut', icon: 'Shield', color: 'from-teal-400 to-emerald-600' },
+  { id: 'streak_100', name: 'Legenda FitTrack', desc: 'Melatih tubuh 100 hari berturut-turut!', icon: 'Crown', color: 'from-yellow-400 to-amber-600' },
+  { id: 'home_master', name: 'Calisthenics Master', desc: 'Menyelesaikan workout Rumah pertama', icon: 'Home', color: 'from-blue-450 to-indigo-550' },
+  { id: 'gym_master', name: 'Monster Gym', desc: 'Menyelesaikan angkatan Gym pertama', icon: 'Dumbbell', color: 'from-red-500 to-zinc-800' },
+  { id: 'hydration_hero', name: 'H2O Elite', desc: 'Minum 2000ml air dalam satu hari', icon: 'GlassWater', color: 'from-cyan-400 to-blue-500' }
+];
+
 interface BodyWeightRecord {
   date: string;
   weight: number;
@@ -91,6 +113,11 @@ export default function App() {
   const [plansData, setPlansData] = useState<CustomPlan[]>([]);
   const [bodyWeightData, setBodyWeightData] = useState<BodyWeightRecord[]>([]);
   const [waterIntake, setWaterIntake] = useState<number>(0); // ml today
+
+  // Leveling and Achievement states
+  const [xp, setXp] = useState<number>(350);
+  const [streak, setStreak] = useState<number>(4);
+  const [unlockedBadges, setUnlockedBadges] = useState<string[]>(['first_workout', 'streak_3']);
 
   // Active workout states
   const [activeWorkout, setActiveWorkout] = useState<ActiveWorkout | null>(null);
@@ -245,6 +272,28 @@ export default function App() {
       localStorage.setItem('fittrack_water_date', todayStr);
     }
 
+    // 5. XP, Streak, and Badges loading
+    const savedXp = localStorage.getItem('fittrack_xp');
+    if (savedXp) {
+      setXp(parseInt(savedXp));
+    } else {
+      localStorage.setItem('fittrack_xp', '350');
+    }
+
+    const savedStreak = localStorage.getItem('fittrack_streak');
+    if (savedStreak) {
+      setStreak(parseInt(savedStreak));
+    } else {
+      localStorage.setItem('fittrack_streak', '4');
+    }
+
+    const savedBadges = localStorage.getItem('fittrack_badges');
+    if (savedBadges) {
+      setUnlockedBadges(JSON.parse(savedBadges));
+    } else {
+      localStorage.setItem('fittrack_badges', JSON.stringify(['first_workout', 'streak_3']));
+    }
+
     // Apply dark class on load if relevant
     const theme = localStorage.getItem('theme');
     if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -257,6 +306,48 @@ export default function App() {
   const saveHistoryToStorage = (newHistory: HistorySession[]) => {
     setHistoryData(newHistory);
     localStorage.setItem('fittrack_history', JSON.stringify(newHistory));
+  };
+
+  // check and award badges helper
+  const checkAndAwardBadges = (_currentXp: number, currentStreak: number, activeCat?: 'home' | 'gym', hasHydratedGoal?: boolean) => {
+    // Start with current state from localstorage or hook
+    const savedBadges = localStorage.getItem('fittrack_badges');
+    const badges: string[] = savedBadges ? JSON.parse(savedBadges) : [...unlockedBadges];
+    let awardedNew = false;
+
+    const award = (id: string) => {
+      if (!badges.includes(id)) {
+        badges.push(id);
+        awardedNew = true;
+      }
+    };
+
+    // 1. first_workout
+    award('first_workout');
+
+    // 2. streak milestones
+    if (currentStreak >= 3) award('streak_3');
+    if (currentStreak >= 10) award('streak_10');
+    if (currentStreak >= 30) award('streak_30');
+    if (currentStreak >= 100) award('streak_100');
+
+    // 3. Category mastery
+    if (activeCat === 'home') award('home_master');
+    if (activeCat === 'gym') award('gym_master');
+
+    // 4. Hydration milestone
+    if (hasHydratedGoal) award('hydration_hero');
+
+    if (awardedNew) {
+      setUnlockedBadges(badges);
+      localStorage.setItem('fittrack_badges', JSON.stringify(badges));
+      
+      const newBadges = badges.filter(b => !unlockedBadges.includes(b));
+      if (newBadges.length > 0) {
+        const badgeNames = newBadges.map(id => BADGES.find(b => b.id === id)?.name || id).join(', ');
+        alert(`🏆 SELAMAT! Anda telah membuka lencana baru: ${badgeNames}! Buka Dashboard Utama untuk melihat.`);
+      }
+    }
   };
 
   // Select recommend card on Dashboard
@@ -353,6 +444,14 @@ export default function App() {
     // If set is marked completed, trigger rest timer
     if (newStatus) {
       setShowRestTimer(true);
+
+      // Award 10 XP for checking a set!
+      const nextXp = xp + 10;
+      setXp(nextXp);
+      localStorage.setItem('fittrack_xp', String(nextXp));
+
+      // Check for hydration/milestones
+      checkAndAwardBadges(nextXp, streak, activeWorkout.workout.category, waterIntake >= 2000);
     }
   };
 
@@ -373,7 +472,7 @@ export default function App() {
     if (!activeWorkout) return;
 
     const totalSeconds = activeWorkout.secondsElapsed;
-    // Estimate calories burned: 0.2 calories per second on average
+    // Estimate calories burned: 0.25 calories per second on average
     const calories = Math.round(totalSeconds * 0.25);
 
     const newSession: HistorySession = {
@@ -391,8 +490,41 @@ export default function App() {
     const updatedHistory = [newSession, ...historyData];
     saveHistoryToStorage(updatedHistory);
 
+    // Award 100 XP for finishing a workout!
+    const nextXp = xp + 100;
+    setXp(nextXp);
+    localStorage.setItem('fittrack_xp', String(nextXp));
+
+    // Calculate Streak
+    let nextStreak = streak;
+    const lastSession = historyData[0]; // historyData is sorted descending by date!
+    const today = new Date();
+    const todayStr = today.toDateString();
+    
+    if (lastSession) {
+      const lastDate = new Date(lastSession.date);
+      const lastDateStr = lastDate.toDateString();
+      
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const yesterdayStr = new Date(Date.now() - oneDayMs).toDateString();
+      
+      if (lastDateStr === yesterdayStr) {
+        nextStreak = streak + 1;
+      } else if (lastDateStr !== todayStr) {
+        nextStreak = 1;
+      }
+    } else {
+      nextStreak = 1;
+    }
+    
+    setStreak(nextStreak);
+    localStorage.setItem('fittrack_streak', String(nextStreak));
+
+    // Check and award badges
+    checkAndAwardBadges(nextXp, nextStreak, activeWorkout.workout.category, waterIntake >= 2000);
+
     // Alert
-    alert(`Hebat! Anda telah menyelesaikan workout "${activeWorkout.workout.name}" selama ${Math.floor(totalSeconds / 60)} menit. Terbakar sekitar ${calories} kalori! 🎉`);
+    alert(`Hebat! Anda telah menyelesaikan workout "${activeWorkout.workout.name}" selama ${Math.floor(totalSeconds / 60)} menit. Terbakar sekitar ${calories} kalori! 🎉 +100 XP diperoleh!`);
     
     // Clear and redirect
     setActiveWorkout(null);
@@ -405,6 +537,11 @@ export default function App() {
     const next = Math.max(0, waterIntake + amount);
     setWaterIntake(next);
     localStorage.setItem('fittrack_today_water', String(next));
+    
+    // Check if hydration goal met to award hydration_hero badge
+    if (next >= 2000) {
+      checkAndAwardBadges(xp, streak, undefined, true);
+    }
   };
 
   // Add body weight data point
@@ -474,7 +611,7 @@ export default function App() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex transition-colors duration-300">
       
       {/* 1. Sidebar desktop navigation */}
-      <Sidebar currentView={currentView} setView={setView} />
+      <Sidebar currentView={currentView} setView={setView} streak={streak} xp={xp} />
 
       {/* 2. Main content area wrapper */}
       <main className="flex-1 md:pl-72 pb-24 md:pb-8 max-w-7xl mx-auto w-full px-4 md:px-8 py-6 relative">
@@ -660,6 +797,76 @@ export default function App() {
                 <ProgressChart historyData={historyData} bodyWeightData={bodyWeightData} />
               </div>
 
+            </div>
+
+            {/* Gamification Achievements Grid */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800/80 p-6 rounded-3xl shadow-sm mt-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-lg font-black text-zinc-800 dark:text-white flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-500 fill-current animate-bounce" /> Piala & Pencapaian Rutinitas
+                  </h3>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-555 mt-0.5">
+                    Dapatkan lencana kehormatan dengan konsisten berolahraga dan mencatatkan kemajuan Anda!
+                  </p>
+                </div>
+                <div className="px-3.5 py-1.5 rounded-full bg-brand-500/5 dark:bg-brand-500/10 border border-brand-100/20 dark:border-brand-900/10 text-xs font-black text-brand-500">
+                  Lencana Unlocked: {unlockedBadges.length} / {BADGES.length}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {BADGES.map((badge) => {
+                  const isUnlocked = unlockedBadges.includes(badge.id);
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center text-center justify-center ${
+                        isUnlocked
+                          ? 'bg-zinc-50/50 dark:bg-zinc-950/20 border-zinc-200/60 dark:border-zinc-850 shadow-sm scale-100 hover:scale-[1.03]'
+                          : 'bg-zinc-50/20 dark:bg-zinc-950/5 border-zinc-200/20 dark:border-zinc-850/30 opacity-60'
+                      }`}
+                    >
+                      {/* Gradient Badge Glow */}
+                      {isUnlocked && (
+                        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${badge.color}`} />
+                      )}
+
+                      {/* Icon container */}
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-transform ${
+                          isUnlocked
+                            ? `bg-gradient-to-br ${badge.color} text-white shadow-md shadow-brand-500/10 scale-100`
+                            : 'bg-zinc-200 dark:bg-zinc-850 text-zinc-400'
+                        }`}
+                      >
+                        {badge.id === 'first_workout' && <Award className="h-5 w-5" />}
+                        {badge.id === 'streak_3' && <Flame className="h-5 w-5" />}
+                        {badge.id === 'streak_10' && <Trophy className="h-5 w-5" />}
+                        {badge.id === 'streak_30' && <Shield className="h-5 w-5" />}
+                        {badge.id === 'streak_100' && <Crown className="h-5 w-5" />}
+                        {badge.id === 'home_master' && <Home className="h-5 w-5" />}
+                        {badge.id === 'gym_master' && <Dumbbell className="h-5 w-5" />}
+                        {badge.id === 'hydration_hero' && <GlassWater className="h-5 w-5" />}
+                      </div>
+
+                      <h4 className={`text-xs font-black tracking-tight ${isUnlocked ? 'text-zinc-850 dark:text-zinc-200' : 'text-zinc-450 dark:text-zinc-600'}`}>
+                        {badge.name}
+                      </h4>
+                      <p className="text-[10px] text-zinc-450 dark:text-zinc-550 leading-tight mt-1 max-w-[120px]">
+                        {badge.desc}
+                      </p>
+
+                      {/* Locked Lock visual overlay */}
+                      {!isUnlocked && (
+                        <div className="absolute top-2 right-2 bg-zinc-200 dark:bg-zinc-850 text-zinc-400 dark:text-zinc-500 p-1 rounded-full text-[8px]">
+                          🔒
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
           </div>
