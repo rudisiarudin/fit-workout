@@ -24,14 +24,10 @@ import {
   ChevronRight,
   Scale,
   PlusCircle,
-  Award,
-  GlassWater,
   Activity,
   Undo2,
   Home,
   Dumbbell,
-  Shield,
-  Crown,
   Trophy
 } from 'lucide-react';
 
@@ -618,16 +614,16 @@ export default function App() {
   };
 
   // Add water tracker ml
-  const handleWaterAdd = (amount: number) => {
-    const next = Math.max(0, waterIntake + amount);
-    setWaterIntake(next);
-    localStorage.setItem('fittrack_today_water', String(next));
-    
-    // Check if hydration goal met to award hydration_hero badge
-    if (next >= 2000) {
-      checkAndAwardBadges(xp, streak, undefined, true);
-    }
-  };
+  // const handleWaterAdd = (amount: number) => {
+  //   const next = Math.max(0, waterIntake + amount);
+  //   setWaterIntake(next);
+  //   localStorage.setItem('fittrack_today_water', String(next));
+  //   
+  //   // Check if hydration goal met to award hydration_hero badge
+  //   if (next >= 2000) {
+  //     checkAndAwardBadges(xp, streak, undefined, true);
+  //   }
+  // };
 
   // Add body weight data point
   const handleAddWeightRecord = (e: React.FormEvent) => {

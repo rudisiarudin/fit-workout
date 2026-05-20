@@ -14,8 +14,7 @@ import {
   TrendingUp,
   Flame,
   Award,
-  Zap,
-  Lock
+  Zap
 } from 'lucide-react';
 
 export interface UserProfile {
