@@ -416,7 +416,8 @@ export default function App() {
       lottieUrl: 'https://lottie.host/8e76dc61-a664-47ea-b4a2-45f10a503e4c/p8oT97mtK8.lottie',
       tutorial: `Program latihan kustom pribadi dengan ${plan.exercises.length} gerakan.`,
       tips: ['Ikuti instruksi masing-masing gerakan', 'Jaga hidrasi Anda tetap optimal'],
-      commonErrors: ['Jangan terburu-buru melakukan gerakan']
+      commonErrors: ['Jangan terburu-buru melakukan gerakan'],
+      benefits: `Melatih beberapa kelompok otot secara bergantian untuk kebugaran maksimal melalui ${plan.exercises.length} jenis gerakan pilihan Anda.`
     };
 
     setActiveWorkout({
@@ -1089,6 +1090,16 @@ export default function App() {
                       </h3>
                       <p className="text-xs text-zinc-600 dark:text-zinc-350 leading-relaxed font-medium">
                         {workout.tutorial}
+                      </p>
+                    </div>
+
+                    {/* Manfaat & Sasaran Latihan */}
+                    <div className="p-6 bg-gradient-to-br from-brand-500/5 to-orange-500/5 dark:from-brand-500/10 dark:to-orange-500/10 border border-brand-500/20 dark:border-brand-500/10 rounded-3xl">
+                      <h3 className="text-sm font-extrabold text-brand-600 dark:text-brand-400 mb-2 flex items-center gap-1.5">
+                        <Sparkles className="h-4.5 w-4.5 text-brand-500 animate-pulse" /> Manfaat Latihan & Sasaran
+                      </h3>
+                      <p className="text-xs text-zinc-650 dark:text-zinc-350 leading-relaxed font-semibold">
+                        {workout.benefits}
                       </p>
                     </div>
 

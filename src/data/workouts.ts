@@ -11,6 +11,7 @@ export interface Workout {
   tutorial: string;
   tips: string[];
   commonErrors: string[];
+  benefits: string;
 }
 
 export const workouts: Workout[] = [
@@ -24,7 +25,7 @@ export const workouts: Workout[] = [
     rest: 60,
     duration: "10 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/6c1a4598-1177-11ee-9e88-bf9e8c56d70c/YDxF9XmjyX.lottie",
-    tutorial: "Posisikan tubuh dalam posisi plank tinggi. Letakkan tangan Anda sedikit lebih lebar dari lebar bahu. Jaga agar tubuh Anda tetap lurus dari kepala hingga tumit. Turunkan tubuh dengan menekuk siku hingga dada hampir menyentuh lantai. Dorong tubuh kembali ke posisi awal dengan meluruskan lengan Anda.",
+    tutorial: "Posisikan tubuh dalam posisi plank tinggi. Letakkan tangan Anda sedikit lebih lebar dari lebar bahu. Jaga agar tubuh Anda tetap lurus dari kepala hingga tumit. Turunkan tubuh dengan menekuk siku hingga dada hampir menyentuh lantai. Dorong tubuh kembali to posisi awal dengan meluruskan lengan Anda.",
     tips: [
       "Jaga tubuh tetap dalam satu garis lurus, kencangkan otot inti (core)",
       "Tarik napas saat menurunkan tubuh, buang napas saat mendorong ke atas",
@@ -34,7 +35,8 @@ export const workouts: Workout[] = [
       "Pinggul melorot ke bawah atau terangkat terlalu tinggi",
       "Siku melebar terlalu lebar (membentuk sudut 90 derajat)",
       "Gerakan tidak penuh (tidak turun cukup rendah)"
-    ]
+    ],
+    benefits: "Melatih kekuatan otot dada (pectoralis), bahu depan (anterior deltoids), dan lengan belakang (triceps) secara bersamaan. Latihan ini juga meningkatkan stabilitas otot inti (core) dan memperbaiki postur tubuh bagian atas tanpa memerlukan alat."
   },
   {
     id: 2,
@@ -56,7 +58,8 @@ export const workouts: Workout[] = [
       "Lutut melampaui ujung jari kaki terlalu jauh",
       "Punggung melengkung ke depan",
       "Tumit terangkat dari lantai saat turun"
-    ]
+    ],
+    benefits: "Merupakan raja latihan tubuh bagian bawah. Sangat efektif melatih otot paha depan (quadriceps), paha belakang (hamstrings), bokong (glutes), serta melatih kekuatan fungsional lutut, meningkatkan mobilitas pinggul, dan membakar kalori secara masif."
   },
   {
     id: 3,
@@ -64,7 +67,7 @@ export const workouts: Workout[] = [
     category: "home",
     muscle: "Core, Abs, Shoulders",
     sets: 3,
-    reps: 1, // 1 rep is holding for a duration
+    reps: 1,
     rest: 45,
     duration: "8 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/dc68e41e-1189-11ee-a704-a3ee683b17ee/ygxWZwnPnw.lottie",
@@ -78,7 +81,8 @@ export const workouts: Workout[] = [
       "Pinggul melorot ke bawah yang menyebabkan punggung bagian bawah melengkung",
       "Mengangkat bokong terlalu tinggi ke atas",
       "Menundukkan kepala atau menengadah terlalu tinggi"
-    ]
+    ],
+    benefits: "Latihan isometrik terbaik untuk mengencangkan dan menstabilkan seluruh otot inti (core), termasuk otot perut dalam (transversus abdominis) dan punggung bawah. Membantu mengurangi nyeri punggung bawah dan memperbaiki keselarasan postur tubuh."
   },
   {
     id: 4,
@@ -86,7 +90,7 @@ export const workouts: Workout[] = [
     category: "home",
     muscle: "Quads, Hamstrings, Glutes",
     sets: 3,
-    reps: 12, // per leg
+    reps: 12,
     rest: 60,
     duration: "10 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/8c3bfbda-116a-11ee-ae27-27c841c68b90/3wj4p7PlV4.lottie",
@@ -100,7 +104,8 @@ export const workouts: Workout[] = [
       "Lutut belakang menyentuh lantai terlalu keras",
       "Tubuh condong terlalu jauh ke depan",
       "Langkah kaki terlalu pendek sehingga membatasi ruang gerak lutut"
-    ]
+    ],
+    benefits: "Melatih kekuatan unilateral (satu sisi kaki secara mandiri) untuk menyeimbangkan kekuatan otot antara kaki kiri dan kanan. Sangat bagus untuk melatih keseimbangan, koordinasi motorik, serta memperkuat quads, hamstrings, dan glutes."
   },
   {
     id: 5,
@@ -122,7 +127,8 @@ export const workouts: Workout[] = [
       "Menarik leher ke depan menggunakan tangan secara agresif",
       "Mengangkat bokong atau kaki dari lantai saat tubuh naik",
       "Menggunakan momentum tubuh alih-alih kekuatan otot perut"
-    ]
+    ],
+    benefits: "Menargetkan otot perut bagian depan (rectus abdominis) serta otot pelentur pinggul (hip flexors). Bermanfaat untuk meningkatkan kekuatan tekan otot perut, menyokong kestabilan torso, serta mendukung gerakan fungsional tubuh sehari-hari."
   },
   {
     id: 6,
@@ -144,7 +150,8 @@ export const workouts: Workout[] = [
       "Mendarat dengan tumit terlalu keras yang dapat mencederai sendi",
       "Lengan tidak diangkat sepenuhnya ke atas kepala",
       "Menekuk lutut secara berlebihan saat mendarat"
-    ]
+    ],
+    benefits: "Latihan kardio seluruh tubuh yang sangat baik untuk meningkatkan detak jantung, mengoptimalkan kapasitas paru-paru (kardiorespirasi), melancarkan sirkulasi darah, meningkatkan kelincahan, serta mempercepat pembakaran lemak tubuh."
   },
   {
     id: 7,
@@ -166,7 +173,8 @@ export const workouts: Workout[] = [
       "Mendorong terlalu tinggi sehingga punggung bawah melengkung tidak nyaman",
       "Tidak mengangkat pinggul cukup tinggi untuk melatih glutes",
       "Melakukan gerakan terlalu cepat tanpa jeda di puncak gerakan"
-    ]
+    ],
+    benefits: "Mengisolasi dan melatih otot bokong (glutes) dan paha belakang tanpa memberikan tekanan berlebih pada lutut atau punggung bawah. Berguna bagi orang yang sering duduk lama untuk mengaktifkan kembali otot glutes yang tidak aktif."
   },
   {
     id: 8,
@@ -174,7 +182,7 @@ export const workouts: Workout[] = [
     category: "home",
     muscle: "Core, Shoulders, Cardio",
     sets: 3,
-    reps: 20, // per side
+    reps: 20,
     rest: 45,
     duration: "9 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/8c27d682-116a-11ee-ae23-838ae461b028/yXjVtxnIso.lottie",
@@ -188,10 +196,9 @@ export const workouts: Workout[] = [
       "Pinggul terangkat terlalu tinggi sehingga beban bergeser ke kaki",
       "Menyeret kaki di lantai saat menarik lutut",
       "Posisi pundak mundur ke belakang tidak lagi di atas pergelangan tangan"
-    ]
+    ],
+    benefits: "Menggabungkan latihan kekuatan otot inti dengan kardio intens. Melatih ketahanan otot bahu, lengan, perut, dan kaki secara simultan, melatih kecepatan kaki, serta meningkatkan metabolisme pembakaran lemak."
   },
-  
-  // GYM WORKOUTS
   {
     id: 9,
     name: "Bench Press",
@@ -212,7 +219,8 @@ export const workouts: Workout[] = [
       "Mengangkat kaki dari lantai atau melengkungkan punggung secara berlebihan",
       "Memantulkan barbel dari dada untuk mendapatkan momentum dorongan",
       "Mengunci sendi siku terlalu keras di puncak gerakan"
-    ]
+    ],
+    benefits: "Latihan utama untuk membangun massa, volume, dan kekuatan absolut otot dada bagian tengah dan atas. Latihan ini juga melatih kekuatan dorong bahu depan serta lengan triceps untuk menunjang performa olahraga dorong."
   },
   {
     id: 10,
@@ -234,7 +242,8 @@ export const workouts: Workout[] = [
       "Menarik palang terlalu jauh ke bawah hingga menyentuh perut",
       "Mengayunkan tubuh ke depan dan belakang untuk membantu menarik beban",
       "Menggunakan genggaman yang terlalu lebar atau terlalu sempit secara tidak nyaman"
-    ]
+    ],
+    benefits: "Latihan andalan untuk membangun lebar otot punggung (latissimus dorsi) guna menciptakan siluet tubuh berbentuk V-taper. Membantu memperkuat otot penarik lengan belikat, menyeimbangkan postur tubuh yang membungkuk, dan memperkuat biceps."
   },
   {
     id: 11,
@@ -256,7 +265,8 @@ export const workouts: Workout[] = [
       "Melengkungkan punggung bagian bawah sehingga menjauh dari sandaran kursi",
       "Mengunci siku terlalu keras di puncak gerakan",
       "Menurunkan dumbbell terlalu rendah hingga kehilangan tegangan pada otot bahu"
-    ]
+    ],
+    benefits: "Membangun otot bahu bulat tiga dimensi (deltoids anterior, lateral, posterior) dan melatih kekuatan dorong lengan vertikal ke atas. Bermanfaat meningkatkan stabilitas sendi bahu dan kekuatan otot triceps."
   },
   {
     id: 12,
@@ -278,7 +288,8 @@ export const workouts: Workout[] = [
       "Mengunci lutut sepenuhnya di puncak gerakan (sangat berbahaya)",
       "Mengangkat bokong dari bantalan kursi saat platform diturunkan terlalu dalam",
       "Menaruh kaki terlalu rendah di platform yang menambah tekanan berlebih pada lutut"
-    ]
+    ],
+    benefits: "Memungkinkan Anda melatih kekuatan otot paha depan (quads) dan bokong dengan beban berat secara aman, tanpa memberikan tekanan aksial pada tulang belakang. Sangat baik untuk membangun kekuatan kaki yang eksplosif."
   },
   {
     id: 13,
@@ -300,7 +311,8 @@ export const workouts: Workout[] = [
       "Meluruskan lengan sepenuhnya (dapat mencederai siku)",
       "Menggunakan momentum tubuh dengan mengayunkan punggung",
       "Menarik kabel terlalu jauh ke belakang hingga melebihi garis bahu"
-    ]
+    ],
+    benefits: "Menjaga tegangan resistensi otot dada secara konstan (tanpa titik mati) di sepanjang lintasan gerak pelukan. Sangat efektif untuk melatih belahan dada bagian tengah, meningkatkan definisi otot dada, dan melatih rentang gerak bahu."
   },
   {
     id: 14,
@@ -312,7 +324,7 @@ export const workouts: Workout[] = [
     rest: 60,
     duration: "10 menit",
     lottieUrl: "https://assets-v2.lottiefiles.com/a/7e30d732-1182-11ee-a920-b3627aa227e0/7tujEvB2wt.lottie",
-    tutorial: "Berdiri tegak dengan dumbbell di masing-masing tangan di samping tubuh, telapak tangan menghadap ke dalam. Jaga siku tetap dekat dengan tubuh. Putar pergelangan tangan Anda saat mengangkat dumbbell hingga telapak tangan menghadap ke atas. Angkat hingga setinggi bahu, lalu turunkan perlahan.",
+    tutorial: "Berdirilah tegak dengan dumbbell di masing-masing tangan di samping tubuh, telapak tangan menghadap ke dalam. Jaga siku tetap dekat dengan tubuh. Putar pergelangan tangan Anda saat mengangkat dumbbell hingga telapak tangan menghadap ke atas. Angkat hingga setinggi bahu, lalu turunkan perlahan.",
     tips: [
       "Jaga agar siku Anda tetap terkunci di samping tubuh, jangan biarkan maju ke depan",
       "Kencangkan biceps Anda sekuat mungkin di puncak gerakan",
@@ -322,7 +334,8 @@ export const workouts: Workout[] = [
       "Mengayunkan tubuh untuk membantu mengangkat beban berat (menggunakan momentum)",
       "Membiarkan siku maju ke depan sehingga melatih otot bahu depan alih-alih biceps",
       "Tidak meluruskan lengan sepenuhnya di bagian bawah gerakan"
-    ]
+    ],
+    benefits: "Melatih otot biceps (lengan depan) secara terisolasi. Bermanfaat memperbesar ukuran lengan bagian depan, melatih kekuatan pergelangan tangan, serta meningkatkan kekuatan genggaman dan daya tarik lengan Anda."
   },
   {
     id: 15,
@@ -344,7 +357,8 @@ export const workouts: Workout[] = [
       "Membiarkan siku bergerak maju-mundur menjauh dari sisi tubuh",
       "Menggunakan berat badan untuk menekan beban ke bawah",
       "Gerakan tidak penuh (tidak meluruskan lengan sampai bawah)"
-    ]
+    ],
+    benefits: "Mengisolasi otot triceps (lengan bagian belakang) dengan beban konstan dari tarikan kabel. Berfungsi mempertegas bentuk lengan belakang, menghilangkan gelambir lengan, serta menyokong kekuatan dorongan sendi siku."
   },
   {
     id: 16,
@@ -366,6 +380,7 @@ export const workouts: Workout[] = [
       "Melengkungkan punggung saat mengangkat (sangat berisiko mencederai saraf tulang belakang)",
       "Posisi barbel terlalu jauh dari tubuh di depan kaki",
       "Melakukan gerakan hiper-ekstensi (melengkung ke belakang terlalu jauh) di puncak gerakan"
-    ]
+    ],
+    benefits: "Latihan compound legendaris yang mengaktifkan hampir seluruh otot tubuh bagian belakang (posterior chain), mulai dari hamstrings, glutes, punggung bawah, erector spinae, hingga otot trapezius. Membawa peningkatan dramatis pada kekuatan tubuh secara menyeluruh."
   }
 ];
